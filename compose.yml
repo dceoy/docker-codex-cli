@@ -1,0 +1,38 @@
+services:
+  codex-cli:
+    container_name: codex-cli
+    image: dceoy/codex-cli:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: codex
+      args:
+        USER_NAME: agent
+        USER_UID: '1001'
+        USER_GID: '1001'
+        ZSH_THEME: nicoulaj
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    tty: true
+    stdin_open: true
+    volumes:
+      - .:/workspace
+      - codex-data:/home/agent/.codex
+      - config-data:/home/agent/.config
+    working_dir: /workspace
+    post_start:
+      - command: bash -c '[[ "$(stat -c "%U:%G" /home/agent/.codex)" != "root:root" ]] || chown agent:agent /home/agent/.codex'
+        user: root
+      - command: bash -c '[[ "$(stat -c "%U:%G" /home/agent/.config)" != "root:root" ]] || chown agent:agent /home/agent/.config'
+        user: root
+      - command: git config --global --add safe.directory /workspace
+        user: agent
+    entrypoint:
+      - /usr/bin/zsh
+    command:
+      - -lc
+      - 'codex --dangerously-bypass-approvals-and-sandbox'
+volumes:
+  codex-data:
+  config-data:
