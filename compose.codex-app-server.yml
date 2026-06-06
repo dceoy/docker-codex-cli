@@ -1,0 +1,51 @@
+services:
+  codex-app-server:
+    container_name: codex-app-server
+    image: dceoy/codex-cli:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: codex
+      args:
+        USER_NAME: agent
+        USER_UID: '1001'
+        USER_GID: '1001'
+        ZSH_THEME: nicoulaj
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      RUST_LOG: ${RUST_LOG:-info}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+    ports:
+      - '${CODEX_APP_SERVER_PORT:-4500}:4500'
+    volumes:
+      - .:/workspace
+      - codex-data:/home/agent/.codex
+      - config-data:/home/agent/.config
+    working_dir: /workspace
+    post_start:
+      - command: bash -c '[[ "$(stat -c "%U:%G" /home/agent/.codex)" != "root:root" ]] || chown agent:agent /home/agent/.codex'
+        user: root
+      - command: bash -c '[[ "$(stat -c "%U:%G" /home/agent/.config)" != "root:root" ]] || chown agent:agent /home/agent/.config'
+        user: root
+      - command: git config --global --add safe.directory /workspace
+        user: agent
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - --fail
+        - --silent
+        - http://127.0.0.1:4500/healthz
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    entrypoint:
+      - /usr/bin/zsh
+    command:
+      - -lc
+      - 'codex app-server --listen ws://0.0.0.0:4500'
+volumes:
+  codex-data:
+  config-data:
