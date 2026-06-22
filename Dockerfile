@@ -42,6 +42,13 @@ RUN \
       --mount=type=cache,target=/root/.cache/pip \
       python3 -m pip install --no-cache-dir --prefix=/usr/local pipx uv
 
+# hadolint ignore=DL3016
+RUN \
+      --mount=type=cache,target=/root/.cache/npm \
+      npm config set prefix /usr/local \
+      && npm upgrade -g \
+      && npm install -g pnpm
+
 RUN \
       curl -fsSL -o /usr/local/bin/print-github-tags \
         https://raw.githubusercontent.com/dceoy/print-github-tags/master/print-github-tags \
@@ -51,10 +58,9 @@ RUN \
       curl -fsSL -o /usr/local/bin/install.ohmyz.sh https://install.ohmyz.sh \
       && chmod +x /usr/local/bin/install.ohmyz.sh
 
-# hadolint ignore=DL3016
 RUN \
-      --mount=type=cache,target=/root/.npm \
-      npm install -g --prefix=/usr/local @openai/codex
+      curl -fsSL -o /usr/local/bin/codex.install.sh https://chatgpt.com/codex/install.sh \
+      && chmod +x /usr/local/bin/codex.install.sh
 
 RUN  \
       groupadd --gid "${USER_GID}" "${USER_NAME}" \
@@ -66,10 +72,15 @@ HEALTHCHECK NONE
 FROM base AS cli
 
 ARG ZSH_THEME='robbyrussell'
+ARG CODEX_CLI_VERSION='latest'
 
 USER "${USER_NAME}"
 
 ENV PATH="/home/${USER_NAME}/.local/bin:${PATH}"
+
+RUN \
+      --mount=type=cache,target=/home/${USER_NAME}/.npm \
+      /usr/local/bin/codex.install.sh --release "${CODEX_CLI_VERSION}"
 
 # hadolint ignore=SC2016
 RUN \

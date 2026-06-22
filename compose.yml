@@ -1,3 +1,4 @@
+---
 services:
   codex-cli:
     container_name: codex-cli
@@ -11,6 +12,7 @@ services:
         USER_UID: '1001'
         USER_GID: '1001'
         ZSH_THEME: nicoulaj
+        CODEX_CLI_VERSION: latest
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
