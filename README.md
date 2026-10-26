@@ -1,5 +1,9 @@
 # docker-codex-cli
 
+The image uses Docker Hardened Debian 13 (`dhi.io/debian-base:trixie-dev`).
+Authenticate before local builds with `docker login dhi.io`; GitHub Actions
+uses the configured Docker Hub token to pull the DHI base.
+
 Dockerfile and compose.yml for [Codex CLI](https://developers.openai.com/codex/cli/)
 
 [![CI/CD](https://github.com/dceoy/docker-codex-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/dceoy/docker-codex-cli/actions/workflows/ci.yml)
